@@ -1,0 +1,1026 @@
+{
+  "info": {
+    "_postman_id": "9eb8dcd6-f7ad-4805-9556-8e16d4de3a06",
+    "name": "GoRest API Test",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "47107565",
+    "_collection_link": "https://go.postman.co/collection/47107565-9eb8dcd6-f7ad-4805-9556-8e16d4de3a06?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "User CRUD",
+      "item": [
+        {
+          "name": "Create a new user",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "var random=Math.random().toString(36).substring(2);\r",
+                  "\r",
+                  "// Generating random email and name.\r",
+                  "var useremail=\"sourov\"+random+\"@gmail.com\";\r",
+                  "var username=\"sourov \"+random;\r",
+                  "\r",
+                  "// Setting environment variables.\r",
+                  "pm.environment.set(\"email_env\",useremail);\r",
+                  "pm.environment.set(\"name_env\",username);\r",
+                  "pm.environment.set(\"base_url\", \"https://gorest.co.in\");"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Passing id everywhere via environment variable.\r",
+                  "\r",
+                  "var jsonData = JSON.parse(responseBody);\r",
+                  "\r",
+                  "pm.environment.set(\"userid_env\", jsonData.id);\r",
+                  "\r",
+                  "// Id is generated after completing the request.\r",
+                  "// Now total 3 environment variables are available.\r",
+                  "\r",
+                  "// Check that the user is created successfully.\r",
+                  "pm.test(\"Status Code is 201\", function () {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "// Check that the response is JSON.\r",
+                  "pm.test(\"Content-Type is JSON\", function () {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "// Check that the user ID exists.\r",
+                  "pm.test(\"User ID Exists\", function () {\r",
+                  "    pm.expect(jsonData.id).to.not.be.undefined;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"{{name_env}}\",\r\n    \"email\": \"{{email_env}}\",\r\n    \"gender\": \"female\",\r\n    \"status\": \"active\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/public/v2/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "public",
+                "v2",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Fetch a single user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Validate JSON fields in the response using an arrow function.\r",
+                  "\r",
+                  "pm.test(\"Values of JSON Fields\", () => {\r",
+                  "\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "\r",
+                  "    // Compare the response data with the environment data.\r",
+                  "\r",
+                  "    pm.expect(jsonData.id).to.eql(Number(pm.environment.get(\"userid_env\")));\r",
+                  "    pm.expect(jsonData.email).to.eql(pm.environment.get(\"email_env\"));\r",
+                  "    pm.expect(jsonData.name).to.eql(pm.environment.get(\"name_env\"));\r",
+                  "\r",
+                  "});\r",
+                  "\r",
+                  "//At the time of creating user (POST), we are storing the data in environment variable. Then when we getting the user (GET), we are comparing this response data with the post creating environment data.\r",
+                  "\r",
+                  "// Check that the user is fetched successfully.\r",
+                  "pm.test(\"Status Code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "// Check that the response is JSON.\r",
+                  "pm.test(\"Content-Type is JSON\", function () {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "packages": {},
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/public/v2/users/{{userid_env}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "public",
+                "v2",
+                "users",
+                "{{userid_env}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List/ View users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// This request gets all users from the API.\r",
+                  "// We check that the request works correctly.\r",
+                  "\r",
+                  "pm.test(\"Status Code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "// The API should return data in JSON format.\r",
+                  "\r",
+                  "pm.test(\"Content-Type is JSON\", function () {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "// The response should contain a list of users.\r",
+                  "// We also check that the list is not empty.\r",
+                  "\r",
+                  "pm.test(\"User List is Not Empty\", function () {\r",
+                  "\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(jsonData).to.be.an(\"array\");\r",
+                  "    pm.expect(jsonData.length).to.be.above(0);\r",
+                  "\r",
+                  "});\r",
+                  "\r",
+                  "// This confirms that the API is returning user records."
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/public/v2/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "public",
+                "v2",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update a user (partial)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// This request updates only the required field of the user.\r",
+                  "\r",
+                  "pm.test(\"Values of Updated Fields\", () => {\r",
+                  "\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "\r",
+                  "    // Compare the updated response with the stored environment data.\r",
+                  "\r",
+                  "    pm.expect(jsonData.id).to.eql(Number(pm.environment.get(\"userid_env\")));\r",
+                  "    pm.expect(jsonData.status).to.eql(\"inactive\");\r",
+                  "\r",
+                  "});\r",
+                  "\r",
+                  "// Check that the user is updated successfully.\r",
+                  "\r",
+                  "pm.test(\"Status Code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "// The updated response should be returned in JSON format.\r",
+                  "\r",
+                  "pm.test(\"Content-Type is JSON\", function () {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "// This confirms that only the selected field is updated."
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"status\": \"inactive\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/public/v2/users/{{userid_env}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "public",
+                "v2",
+                "users",
+                "{{userid_env}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify PATCH Update",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// This request checks whether the PATCH update is saved.\r",
+                  "\r",
+                  "pm.test(\"Values of Updated Fields\", () => {\r",
+                  "\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "\r",
+                  "    // Compare the latest user data with the expected values.\r",
+                  "\r",
+                  "    pm.expect(jsonData.id).to.eql(Number(pm.environment.get(\"userid_env\")));\r",
+                  "    pm.expect(jsonData.status).to.eql(\"inactive\");\r",
+                  "\r",
+                  "});\r",
+                  "\r",
+                  "// Check that the request is successful.\r",
+                  "\r",
+                  "pm.test(\"Status Code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "// The API should return the latest user data in JSON format.\r",
+                  "\r",
+                  "pm.test(\"Content-Type is JSON\", function () {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "// This confirms that the PATCH update is permanently saved."
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/public/v2/users/{{userid_env}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "public",
+                "v2",
+                "users",
+                "{{userid_env}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Replace a User (Full )",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "//Same as creating users (POST) as if no need to update again and again manually.\r",
+                  "var random=Math.random().toString(36).substring(2);\r",
+                  "\r",
+                  "// Generating random email and name.\r",
+                  "var useremail=\"sourov\"+random+\"@gmail.com\";\r",
+                  "var username=\"sourov \"+random;\r",
+                  "\r",
+                  "// Setting environment variables.\r",
+                  "pm.environment.set(\"email_env\",useremail);\r",
+                  "pm.environment.set(\"name_env\",username);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// This request replaces all user information with new values.\r",
+                  "// We verify that every updated field is returned correctly.\r",
+                  "// The user ID should remain the same because we are updating\r",
+                  "// an existing user instead of creating a new one.\r",
+                  "\r",
+                  "pm.test(\"Values of Replaced Fields\", () => {\r",
+                  "\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "\r",
+                  "    // Compare the latest response with the stored environment values.\r",
+                  "    // These values were saved during the Create User request.\r",
+                  "\r",
+                  "    pm.expect(jsonData.id).to.eql(Number(pm.environment.get(\"userid_env\")));\r",
+                  "    pm.expect(jsonData.name).to.eql(pm.environment.get(\"name_env\"));\r",
+                  "    pm.expect(jsonData.email).to.eql(pm.environment.get(\"email_env\"));\r",
+                  "    pm.expect(jsonData.gender).to.eql(\"male\");\r",
+                  "    pm.expect(jsonData.status).to.eql(\"active\");\r",
+                  "\r",
+                  "});\r",
+                  "\r",
+                  "// Check that the PUT request is completed successfully.\r",
+                  "\r",
+                  "pm.test(\"Status Code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "// Check that the API returns the updated user data in JSON format.\r",
+                  "\r",
+                  "pm.test(\"Content-Type is JSON\", function () {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "// This confirms that the full user information\r",
+                  "// has been replaced successfully."
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\r\n    \"name\": \"{{name_env}}\",\r\n    \"email\": \"{{email_env}}\",\r\n    \"gender\": \"male\",\r\n    \"status\": \"active\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/public/v2/users/{{userid_env}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "public",
+                "v2",
+                "users",
+                "{{userid_env}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify PUT Update",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// This request checks whether the PUT update has been saved successfully.\r",
+                  "// We fetch the same user again and compare the latest response\r",
+                  "// with the values stored in the environment.\r",
+                  "\r",
+                  "pm.test(\"Values of Replaced Fields\", () => {\r",
+                  "\r",
+                  "    var jsonData = pm.response.json();\r",
+                  "\r",
+                  "    // Compare the latest response with the expected user data.\r",
+                  "    // The values should match the information stored during\r",
+                  "    // the previous requests.\r",
+                  "\r",
+                  "    pm.expect(jsonData.id).to.eql(Number(pm.environment.get(\"userid_env\")));\r",
+                  "    pm.expect(jsonData.name).to.eql(pm.environment.get(\"name_env\"));\r",
+                  "    pm.expect(jsonData.email).to.eql(pm.environment.get(\"email_env\"));\r",
+                  "    pm.expect(jsonData.gender).to.eql(\"male\");\r",
+                  "    pm.expect(jsonData.status).to.eql(\"active\");\r",
+                  "\r",
+                  "});\r",
+                  "\r",
+                  "// Check that the GET request is completed successfully.\r",
+                  "\r",
+                  "pm.test(\"Status Code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "// Check that the API returns the latest user data in JSON format.\r",
+                  "\r",
+                  "pm.test(\"Content-Type is JSON\", function () {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "// This final verification confirms that the PUT update\r",
+                  "// has been permanently saved on the server."
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/public/v2/users/{{userid_env}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "public",
+                "v2",
+                "users",
+                "{{userid_env}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete a user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Check that the DELETE request is completed successfully.\r",
+                  "\r",
+                  "pm.test(\"Status Code is 204\", function () {\r",
+                  "    pm.response.to.have.status(204);\r",
+                  "});\r",
+                  "\r",
+                  "// A successful DELETE request should not return any response body.\r",
+                  "\r",
+                  "pm.test(\"Response Body is Empty\", function () {\r",
+                  "    pm.expect(pm.response.text()).to.eql(\"\");\r",
+                  "});\r",
+                  "\r",
+                  "\r",
+                  "//After completing all request successfull, environment variable will be auto delete. But when we run the request again, it will create new user and update the environment variable. It free the memory space.\r",
+                  "// This request deletes the user permanently from the server.\r",
+                  "// Clear the temporary environment variables.\r",
+                  "\r",
+                  "pm.environment.unset(\"userid_env\");\r",
+                  "pm.environment.unset(\"email_env\");\r",
+                  "pm.environment.unset(\"name_env\");\r",
+                  "\r",
+                  "// This confirms that the user has been deleted successfully."
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "packages": {},
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/public/v2/users/{{userid_env}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "public",
+                "v2",
+                "users",
+                "{{userid_env}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Deleted User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// This request checks whether the deleted user no longer exists.\r",
+                  "\r",
+                  "pm.test(\"Status Code is 404\", function () {\r",
+                  "    pm.response.to.have.status(404);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Content-Type is JSON\", function () {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "// This confirms that the user was deleted successfully."
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/public/v2/users/{{userid_env}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "public",
+                "v2",
+                "users",
+                "{{userid_env}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "This folder contains the complete CRUD workflow including Create, Read, Update, Replace and Delete operations with verification requests."
+    },
+    {
+      "name": "Negative Testing",
+      "item": [
+        {
+          "name": "Invalid Token",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_secret_0eik}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/public/v2/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "public",
+                "v2",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid User ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// This request checks whether a non-existing user ID returns 404.\r",
+                  "// We intentionally use a user ID that does not exist.\r",
+                  "\r",
+                  "pm.test(\"Status Code is 404\", function () {\r",
+                  "    pm.response.to.have.status(404);\r",
+                  "});\r",
+                  "\r",
+                  "// Check that the response is returned in JSON format.\r",
+                  "\r",
+                  "pm.test(\"Content-Type is JSON\", function () {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "// This confirms that invalid user IDs are handled correctly."
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/public/v2/users/999999999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "public",
+                "v2",
+                "users",
+                "999999999"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Without Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// This request checks whether email is a required field.\r",
+                  "// We intentionally send the request without an email.\r",
+                  "\r",
+                  "pm.test(\"Status Code is 422\", function () {\r",
+                  "    pm.response.to.have.status(422);\r",
+                  "});\r",
+                  "\r",
+                  "// Check that the response is returned in JSON format.\r",
+                  "\r",
+                  "pm.test(\"Content-Type is JSON\", function () {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "// This confirms that required fields are validated correctly."
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Test User\",\r\n  \"gender\": \"male\",\r\n  \"status\": \"active\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/public/v2/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "public",
+                "v2",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Duplicate Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// This request checks whether duplicate email addresses are rejected.\r",
+                  "// We intentionally reuse an existing email.\r",
+                  "\r",
+                  "pm.test(\"Status Code is 422\", function () {\r",
+                  "    pm.response.to.have.status(422);\r",
+                  "});\r",
+                  "\r",
+                  "// Check that the response is returned in JSON format.\r",
+                  "\r",
+                  "pm.test(\"Content-Type is JSON\", function () {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "// This confirms that duplicate records are not allowed."
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Duplicate User\",\r\n  \"email\": \"{{email_env}}\",\r\n  \"gender\": \"male\",\r\n  \"status\": \"active\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/public/v2/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "public",
+                "v2",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Gender",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// This request checks whether an invalid gender value is rejected.\r",
+                  "// We intentionally send an unsupported gender value.\r",
+                  "\r",
+                  "pm.test(\"Status Code is 422\", function () {\r",
+                  "    pm.response.to.have.status(422);\r",
+                  "});\r",
+                  "\r",
+                  "// Check that the response is returned in JSON format.\r",
+                  "\r",
+                  "pm.test(\"Content-Type is JSON\", function () {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "// This confirms that invalid field values are validated correctly."
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Test User\",\r\n  \"email\": \"invalidgender123@mail.com\",\r\n  \"gender\": \"robot\",\r\n  \"status\": \"active\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/public/v2/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "public",
+                "v2",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Empty Name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// This request checks whether an empty name is rejected.\r",
+                  "// We intentionally leave the name field blank.\r",
+                  "\r",
+                  "pm.test(\"Status Code is 422\", function () {\r",
+                  "    pm.response.to.have.status(422);\r",
+                  "});\r",
+                  "\r",
+                  "// Check that the response is returned in JSON format.\r",
+                  "\r",
+                  "pm.test(\"Content-Type is JSON\", function () {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+                  "});\r",
+                  "\r",
+                  "// This confirms that required text fields are validated correctly."
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"\",\r\n    \"email\": \"emptyname123@mail.com\",\r\n    \"gender\": \"male\",\r\n    \"status\": \"active\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/public/v2/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "public",
+                "v2",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Wrong Endpoint",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// This request checks whether an invalid endpoint returns 404.\r",
+                  "// We intentionally use a URL that does not exist.\r",
+                  "\r",
+                  "pm.test(\"Status Code is 404\", function () {\r",
+                  "    pm.response.to.have.status(404);\r",
+                  "});\r",
+                  "\r",
+                  "// Check that the server returns an HTML error page.\r",
+                  "\r",
+                  "pm.test(\"Content-Type is HTML\", function () {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/html\");\r",
+                  "});\r",
+                  "\r",
+                  "// This confirms that unknown endpoints are handled correctly."
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/public/v2/invalidendpoint",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "public",
+                "v2",
+                "invalidendpoint"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Wrong Method",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "//\"I tested an unsupported DELETE request on /public/v2/users. GoRest returned 404 Not Found with an HTML error page because the route itself does not exist for DELETE, which is the API's expected behavior.\"\r",
+                  "\r",
+                  "// This request checks how the API handles an unsupported request.\r",
+                  "// We intentionally use DELETE on a route that does not support it.\r",
+                  "\r",
+                  "pm.test(\"Status Code is 404\", function () {\r",
+                  "    pm.response.to.have.status(404);\r",
+                  "});\r",
+                  "\r",
+                  "// Check that the server returns an HTML error page.\r",
+                  "\r",
+                  "pm.test(\"Content-Type is HTML\", function () {\r",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/html\");\r",
+                  "});\r",
+                  "\r",
+                  "// This confirms that the invalid route is handled correctly."
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/public/v2/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "public",
+                "v2",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "This folder contains validation and error-handling scenarios such as invalid token, invalid user ID, duplicate email and unsupported requests."
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "1ba04333b82205f2d3a45861fd48ce513401c4d57bda7c439e0105dbbe5f37bf",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "name_env",
+      "value": ""
+    },
+    {
+      "key": "email_env",
+      "value": ""
+    },
+    {
+      "key": "auth_secret_0eik",
+      "secret": true
+    }
+  ]
+}
